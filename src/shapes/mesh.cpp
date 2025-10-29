@@ -38,7 +38,47 @@ protected:
 
     bool intersect(int primitiveIndex, const Ray &ray, Intersection &its,
                    Sampler &rng) const override {
-        NOT_IMPLEMENTED
+        // Möller–Trumbore intersection algorithm:
+        // https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html
+        const Vector3i &triangle = m_triangles[primitiveIndex];
+        const Vertex vertex0     = m_vertices[triangle[0]];
+        const Vertex vertex1     = m_vertices[triangle[1]];
+        const Vertex vertex2     = m_vertices[triangle[2]];
+        const Vector edge1       = vertex1.position - vertex0.position;
+        const Vector edge2       = vertex2.position - vertex0.position;
+
+        constexpr float kEpsilon = std::numeric_limits<float>::epsilon();
+
+        const Vector pvec = ray.direction.cross(edge2);
+        const float det   = edge1.dot(pvec);
+        // If the determinant is negative, the triangle is back-facing.
+        // If the determinant is close to 0, the ray misses the triangle.
+        // If det is close to 0, the ray and triangle are parallel.
+        if (det < kEpsilon && det > -kEpsilon)
+            return false;
+        const float invDet = 1 / det;
+        const Vector tvec  = ray.origin - vertex0.position;
+        const float u      = tvec.dot(pvec) * invDet;
+        if (u < 0 || u > 1)
+            return false;
+
+        const Vector qvec = tvec.cross(edge1);
+        const float v     = ray.direction.dot(qvec) * invDet;
+        if (v < 0 || u + v > 1)
+            return false;
+        const float t = edge2.dot(qvec) * invDet;
+        if (t < Epsilon || t > its.t)
+            return false;
+
+        // interpolate normals
+        const Vertex vInterpolated =
+            Vertex::interpolate({ u, v }, vertex0, vertex1, vertex2);
+        its.t              = t;
+        its.geometryNormal = edge1.cross(edge2).normalized();
+        its.shadingNormal  = m_smoothNormals ? vInterpolated.normal.normalized()
+                                             : its.geometryNormal;
+        its.pdf            = 0;
+        return true;
 
         // hints:
         // * use m_triangles[primitiveIndex] to get the vertex indices of the
@@ -57,11 +97,23 @@ protected:
     }
 
     Bounds getBoundingBox(int primitiveIndex) const override {
-        NOT_IMPLEMENTED
+        const Vector3i &triangle = m_triangles[primitiveIndex];
+        const Point a            = m_vertices[triangle[0]].position;
+        const Point b            = m_vertices[triangle[1]].position;
+        const Point c            = m_vertices[triangle[2]].position;
+        Bounds bound;
+        bound.extend(a);
+        bound.extend(b);
+        bound.extend(c);
+        return bound;
     }
 
     Point getCentroid(int primitiveIndex) const override {
-        NOT_IMPLEMENTED
+        const Vector3i &triangle = m_triangles[primitiveIndex];
+        const Point a            = m_vertices[triangle[0]].position;
+        const Point b            = m_vertices[triangle[1]].position;
+        const Point c            = m_vertices[triangle[2]].position;
+        return (Vector(a) + Vector(b) + Vector(c)) / 3;
     }
 
 public:

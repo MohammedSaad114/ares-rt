@@ -16,10 +16,16 @@ public:
      * potentially with multiple samples for each pixel.
      */
     Color Li(const Ray &ray, Sampler &rng) override {
+        Intersection its = m_scene->intersect(ray, rng);
+
         Vector d = ray.direction;
         if (m_variable == "normals") {
-            // remap the direction from [-1,+1]^3 to [0,+1]^3
-            return Color((d + Vector(1)) / 2);
+            if (its) {
+                // n' = (n + 1) / 2
+                return (Color(its.shadingNormal) + Color(1, 1, 1)) / 2;
+            }
+            // no intersection, 0 normal
+            return Color(0.5f);
         }
         return Color();
     }

@@ -21,9 +21,9 @@ public:
         const std::string fovAxis = properties.get<std::string>("fovAxis");
 
         // the tangent of half the field of view in radians precomputed
-        const float fovTanHalf = tan(fov * Pi / 360.0f);
-        const float aspectRatio =
-            m_resolution.x() / static_cast<float>(m_resolution.y());
+        const float fovTanHalf  = tan(fov * Pi / 360.0f);
+        const float aspectRatio = static_cast<float>(m_resolution.x()) /
+                                  static_cast<float>(m_resolution.y());
 
         m_scale = (fovAxis == "x")
                       ? Vector2(fovTanHalf, fovTanHalf / aspectRatio)

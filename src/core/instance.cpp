@@ -5,8 +5,7 @@
 
 namespace lightwave {
 
-void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
-}
+void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {}
 
 inline void validateIntersection(const Intersection &its) {
     // use the following macros to make debugginer easier:
@@ -50,7 +49,7 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
 
     const float previousT = its.t;
     Ray localRay;
-    NOT_IMPLEMENTED
+    localRay = m_transform->inverse(worldRay).normalized();
 
     // hints:
     // * transform the ray (do not forget to normalize!)
