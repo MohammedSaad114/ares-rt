@@ -120,7 +120,7 @@ class AccelerationStructure : public Shape {
             const auto rightT =
                 intersectAABB(m_nodes[node.rightChildIndex()].aabb, ray);
             if (leftT < rightT) { // left child is hit first; test left child
-                                  // first, then right child
+                // first, then right child
                 if (leftT < its.t)
                     wasIntersected |= intersectNode(
                         m_nodes[node.leftChildIndex()], ray, its, rng);
@@ -128,7 +128,7 @@ class AccelerationStructure : public Shape {
                     wasIntersected |= intersectNode(
                         m_nodes[node.rightChildIndex()], ray, its, rng);
             } else { // right child is hit first; test right child first, then
-                     // left child
+                // left child
                 if (rightT < its.t)
                     wasIntersected |= intersectNode(
                         m_nodes[node.rightChildIndex()], ray, its, rng);
@@ -163,7 +163,7 @@ class AccelerationStructure : public Shape {
             const auto rightT =
                 intersectAABB(m_nodes[node.rightChildIndex()].aabb, ray);
             if (leftT < rightT) { // left child is hit first; test left child
-                                  // first, then right child
+                // first, then right child
                 if (leftT < tMax)
                     transmittanceNode(
                         m_nodes[node.leftChildIndex()], ray, tMax, rng, T);
@@ -171,7 +171,7 @@ class AccelerationStructure : public Shape {
                     transmittanceNode(
                         m_nodes[node.rightChildIndex()], ray, tMax, rng, T);
             } else { // right child is hit first; test right child first, then
-                     // left child
+                // left child
                 if (rightT < tMax)
                     transmittanceNode(
                         m_nodes[node.rightChildIndex()], ray, tMax, rng, T);
@@ -202,7 +202,7 @@ class AccelerationStructure : public Shape {
             return Infinity; // the bounding box lies behind the ray origin
 
         return tNear; // return the first intersection with the bounding box
-                      // (may also be negative!)
+        // (may also be negative!)
     }
 
     /// @brief Computes the axis aligned bounding box for a leaf BVH node
@@ -221,7 +221,6 @@ class AccelerationStructure : public Shape {
         return 2 * (size.x() * size.y() + size.x() * size.z() +
                     size.y() * size.z());
     }
-
     /**
      * For a given node, computes split axis and split position that minimize
      * the surface area heuristic.
@@ -233,7 +232,70 @@ class AccelerationStructure : public Shape {
      */
     void binning(const Node &node, int &bestSplitAxis,
                  float &bestSplitPosition) {
-        NOT_IMPLEMENTED
+        static const int BINS = 16;
+        struct Bin {
+            Bounds aabb;
+            int triCount = 0;
+        };
+        int firstPrimitive = node.firstPrimitiveIndex();
+        int lastPrimitive  = node.lastPrimitiveIndex();
+
+        float bestCost = 1e30f;
+
+        for (int a = 0; a < 3; a++) {
+
+            // bounds range
+            float boundsMin = 1e30f, boundsMax = -1e30f;
+            for (int i = firstPrimitive; i <= lastPrimitive; i++) {
+                boundsMin =
+                    min(boundsMin, getCentroid(m_primitiveIndices[i])[a]);
+                boundsMax =
+                    max(boundsMax, getCentroid(m_primitiveIndices[i])[a]);
+            }
+            if (boundsMin == boundsMax)
+                continue;
+
+            // populate the bins
+            Bin bin[BINS];
+            float scale = BINS / (boundsMax - boundsMin);
+            for (int i = firstPrimitive; i <= lastPrimitive; i++) {
+                int binIdx =
+                    min(BINS - 1,
+                        max(0,
+                            (int) ((getCentroid(m_primitiveIndices[i])[a] -
+                                    boundsMin) *
+                                   scale)));
+                bin[binIdx].triCount++;
+                bin[binIdx].aabb.extend(getBoundingBox(m_primitiveIndices[i]));
+            }
+
+            // gather data for the 15 planes between the 16 bins
+            float leftArea[BINS - 1], rightArea[BINS - 1];
+            int leftCount[BINS - 1], rightCount[BINS - 1];
+            Bounds leftBox, rightBox;
+            int leftSum = 0, rightSum = 0;
+            for (int i = 0; i < BINS - 1; i++) {
+                leftSum += bin[i].triCount;
+                leftCount[i] = leftSum;
+                leftBox.extend(bin[i].aabb);
+                leftArea[i] = surfaceArea(leftBox);
+                rightSum += bin[BINS - 1 - i].triCount;
+                rightCount[BINS - 2 - i] = rightSum;
+                rightBox.extend(bin[BINS - 1 - i].aabb);
+                rightArea[BINS - 2 - i] = surfaceArea(rightBox);
+            }
+
+            // calculate SAH cost for the 15 planes
+            scale = (boundsMax - boundsMin) / BINS;
+            for (int i = 0; i < BINS - 1; i++) {
+                float planeCost =
+                    leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
+                if (planeCost < bestCost)
+                    bestSplitAxis     = a,
+                    bestSplitPosition = boundsMin + scale * (i + 1),
+                    bestCost          = planeCost;
+            }
+        }
     }
 
     /// @brief Attempts to subdivide a given BVH node.
@@ -244,7 +306,7 @@ class AccelerationStructure : public Shape {
         }
 
         // set to true when implementing binning
-        static constexpr bool UseSAH = false;
+        static constexpr bool UseSAH = true;
 
         int splitAxis = -1;
         float splitPosition;
