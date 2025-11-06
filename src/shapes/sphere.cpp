@@ -52,6 +52,9 @@ public:
         if (t1 < Epsilon || t2 < Epsilon) {
             t = std::max(t1, t2);
         }
+        if (t >= its.t) {
+            return false;
+        }
         its.t                = t;
         const Point position = ray.origin + t * ray.direction;
         populate(its,
