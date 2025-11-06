@@ -1012,6 +1012,7 @@ struct Intersection : public SurfaceEvent {
     EmissionEval evaluateEmission() const;
     /// @brief Samples the Bsdf of the underlying surface.
     BsdfSample sampleBsdf(Sampler &rng) const;
+    BsdfEval evaluateBsdf(const Vector &wi) const;
 
     Light *light() const;
 };
