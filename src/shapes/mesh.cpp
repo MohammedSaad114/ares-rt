@@ -67,7 +67,7 @@ protected:
         if (v < 0 || u + v > 1)
             return false;
         const float t = edge2.dot(qvec) * invDet;
-        if (t < Epsilon || t > its.t)
+        if (t < Epsilon || t >= its.t)
             return false;
 
         // interpolate normals
