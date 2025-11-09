@@ -69,10 +69,13 @@ protected:
         const float t = edge2.dot(qvec) * invDet;
         if (t < Epsilon || t >= its.t)
             return false;
-
         // interpolate normals
         const Vertex vInterpolated =
             Vertex::interpolate({ u, v }, vertex0, vertex1, vertex2);
+        its.position = ray.origin + t * ray.direction;
+        Vector tangent = edge1.normalized();
+        tangent = tangent - tangent.dot(its.shadingNormal) * its.shadingNormal;
+        its.tangent        = tangent;
         its.t              = t;
         its.geometryNormal = edge1.cross(edge2).normalized();
         its.shadingNormal  = m_smoothNormals ? vInterpolated.normal.normalized()

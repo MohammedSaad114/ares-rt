@@ -20,9 +20,9 @@ public:
 
     BsdfSample sample(const Point2 &uv, const Vector &wo,
                       Sampler &rng) const override {
-        Vector newWi = squareToUniformHemisphere(rng.next2D()).normalized();
-        float pdf    = uniformHemispherePdf();
-        return BsdfSample{ newWi, m_albedo->evaluate(uv) };
+        Vector newWi = squareToCosineHemisphere(rng.next2D()).normalized();
+        float pdf    = cosineHemispherePdf(newWi);
+        return BsdfSample{ newWi, (m_albedo->evaluate(uv) / Pi) * pdf };
     }
 
     std::string toString() const override {

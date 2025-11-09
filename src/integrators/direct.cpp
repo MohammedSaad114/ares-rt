@@ -14,7 +14,8 @@ public:
      */
     Color Li(const Ray &ray, Sampler &rng) override {
         Intersection its = m_scene->intersect(ray, rng);
-        Color cont       = Color(0) + its.evaluateEmission().value;
+        Color cont       = its.evaluateEmission().value;
+
         if (!its) {
             return cont;
         }
@@ -39,16 +40,12 @@ public:
             }
         }
 
-        /**
-         *
         BsdfSample bsdfSample = its.sampleBsdf(rng);
         if (!bsdfSample.isInvalid()) {
             Ray newRay{ its.position, bsdfSample.wi };
             Intersection newShapes = m_scene->intersect(newRay, rng);
             cont += bsdfSample.weight * newShapes.evaluateEmission().value;
-            cont += newShapes.evaluateEmission().value;
         }
-        */
 
 
         return cont;
