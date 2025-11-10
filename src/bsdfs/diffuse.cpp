@@ -22,7 +22,7 @@ public:
                       Sampler &rng) const override {
         Vector newWi = squareToCosineHemisphere(rng.next2D()).normalized();
         float pdf    = cosineHemispherePdf(newWi);
-        return BsdfSample{ newWi, (m_albedo->evaluate(uv) / Pi) * pdf };
+        return BsdfSample{ newWi, m_albedo->evaluate(uv) };
     }
 
     std::string toString() const override {

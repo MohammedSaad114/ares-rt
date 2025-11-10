@@ -14,7 +14,7 @@ public:
         Vector normal{ 0, 0, 1 };
         Color brdf     = m_emission->evaluate(uv) / Pi;
         float cosTheta = normal.dot(wo) / wo.length();
-        return EmissionEval{ brdf * cosTheta };
+        return EmissionEval{ m_emission->evaluate(uv) };
     }
 
     std::string toString() const override {

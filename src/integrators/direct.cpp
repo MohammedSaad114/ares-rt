@@ -20,18 +20,13 @@ public:
             return cont;
         }
 
-
         LightSample lightSample = m_scene->sampleLight(rng);
-        if (lightSample.isInvalid()) {
-            return cont;
-        }
-
-        const Light *light = lightSample.light;
-        if (!light->canBeIntersected()) {
+        const Light *light      = lightSample.light;
+        if (light && !light->canBeIntersected()) {
             DirectLightSample directSample =
                 light->sampleDirect(its.position, rng);
 
-            Ray secRay { its.position , directSample.wi };
+            Ray secRay{ its.position, directSample.wi };
             Intersection secIts = m_scene->intersect(secRay, rng);
 
             if (!secIts || secIts.t >= directSample.distance) {
@@ -46,7 +41,6 @@ public:
             Intersection newShapes = m_scene->intersect(newRay, rng);
             cont += bsdfSample.weight * newShapes.evaluateEmission().value;
         }
-
 
         return cont;
     }
