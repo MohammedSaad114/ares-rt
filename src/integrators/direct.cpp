@@ -29,7 +29,7 @@ public:
             Ray secRay{ its.position, directSample.wi };
             Intersection secIts = m_scene->intersect(secRay, rng);
 
-            if (!secIts || secIts.t >= directSample.distance) {
+            if (!secIts || secIts.t > directSample.distance) {
                 cont += its.evaluateBsdf(secRay.direction).value *
                         directSample.weight / lightSample.probability;
             }

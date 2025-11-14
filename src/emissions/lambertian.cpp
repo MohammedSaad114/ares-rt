@@ -12,9 +12,12 @@ public:
 
     EmissionEval evaluate(const Point2 &uv, const Vector &wo) const override {
         Vector normal{ 0, 0, 1 };
-        Color brdf     = m_emission->evaluate(uv) / Pi;
+        Color brdf     = m_emission->evaluate(uv);
         float cosTheta = normal.dot(wo) / wo.length();
-        return EmissionEval{ m_emission->evaluate(uv) };
+        if (cosTheta <= 0) {
+            brdf = Color(0);
+        }
+        return EmissionEval{ brdf };
     }
 
     std::string toString() const override {

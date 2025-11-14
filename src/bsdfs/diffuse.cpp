@@ -4,6 +4,7 @@ namespace lightwave {
 
 class Diffuse : public Bsdf {
     ref<Texture> m_albedo;
+    Vector m_normal{ 0, 0, 1 };
 
 public:
     Diffuse(const Properties &properties) {
@@ -12,17 +13,27 @@ public:
 
     BsdfEval evaluate(const Point2 &uv, const Vector &wo,
                       const Vector &wi) const override {
-        Vector normal{ 0, 0, 1 };
-        Color brdf     = m_albedo->evaluate(uv) / Pi;
-        float cosTheta = normal.dot(wi) / wi.length();
+        // cos(theta) = N * L, where L is the light direction vector and N is
+        // the surface normal vector dot product of tow unit vectors is equal to
+        // the cosine of the angle between them ref:
+        // https://www.youtube.com/watch?v=FiYDkMZCSF4&list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl&index=5
+        // minute 25:00
+        if (!Frame::sameHemisphere(wo, wi))
+            return BsdfEval::invalid();
+        Color brdf{ m_albedo->evaluate(uv) / Pi };
+        float cosTheta = m_normal.dot(wi) / wi.length();
+        cosTheta       = max(cosTheta, 0.0f);
         return BsdfEval{ brdf * cosTheta };
     }
 
     BsdfSample sample(const Point2 &uv, const Vector &wo,
                       Sampler &rng) const override {
-        Vector newWi = squareToCosineHemisphere(rng.next2D()).normalized();
-        float pdf    = cosineHemispherePdf(newWi);
-        return BsdfSample{ newWi, m_albedo->evaluate(uv) };
+        Color brdf{ m_albedo->evaluate(uv) };
+        Vector newWi   = squareToCosineHemisphere(rng.next2D());
+        float cosTheta = m_normal.dot(wo) / wo.length();
+        newWi          = cosTheta > 0.0f ? newWi : -newWi;
+        // float pdf      = cosineHemispherePdf(newWi);
+        return BsdfSample{ newWi, brdf };
     }
 
     std::string toString() const override {
