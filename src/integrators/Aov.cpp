@@ -19,8 +19,6 @@ public:
      */
     Color Li(const Ray &ray, Sampler &rng) override {
         Intersection its = m_scene->intersect(ray, rng);
-
-        Vector d = ray.direction;
         if (m_variable == "normals") {
             if (its) {
                 // n' = (n + 1) / 2
