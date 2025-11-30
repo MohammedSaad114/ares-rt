@@ -72,7 +72,7 @@ protected:
         // interpolate normals
         const Vertex vInterpolated =
             Vertex::interpolate({ u, v }, vertex0, vertex1, vertex2);
-        its.position = ray.origin + t * ray.direction;
+        its.position   = ray.origin + t * ray.direction;
         Vector tangent = edge1.normalized();
         tangent = tangent - tangent.dot(its.shadingNormal) * its.shadingNormal;
         its.tangent        = tangent;
@@ -81,6 +81,7 @@ protected:
         its.shadingNormal  = m_smoothNormals ? vInterpolated.normal.normalized()
                                              : its.geometryNormal;
         its.pdf            = 0;
+        its.uv             = vInterpolated.uv;
         return true;
 
         // hints:

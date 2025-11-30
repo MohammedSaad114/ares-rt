@@ -18,11 +18,16 @@ public:
         // the cosine of the angle between them ref:
         // https://www.youtube.com/watch?v=FiYDkMZCSF4&list=PLlrATfBNZ98edc5GshdBtREv5asFW3yXl&index=5
         // minute 25:00
+
+        // incoming and outgoing directions must lie in the same hemisphere
         if (!Frame::sameHemisphere(wo, wi))
             return BsdfEval::invalid();
+
         Color brdf{ m_albedo->evaluate(uv) / Pi };
         float cosTheta = m_normal.dot(wi) / wi.length();
-        cosTheta       = max(cosTheta, 0.0f);
+
+        // no reflection if light comes from behind the surface
+        cosTheta = max(cosTheta, 0.0f);
         return BsdfEval{ brdf * cosTheta };
     }
 
@@ -31,7 +36,9 @@ public:
         Color brdf{ m_albedo->evaluate(uv) };
         Vector newWi   = squareToCosineHemisphere(rng.next2D());
         float cosTheta = m_normal.dot(wo) / wo.length();
-        newWi          = cosTheta > 0.0f ? newWi : -newWi;
+
+        // ensures new direction is in the same hemisphere as the outgoing
+        newWi = cosTheta > 0.0f ? newWi : -newWi;
         // float pdf      = cosineHemispherePdf(newWi);
         return BsdfSample{ newWi, brdf };
     }

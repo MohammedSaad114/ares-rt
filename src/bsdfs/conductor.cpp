@@ -20,14 +20,18 @@ public:
 
     BsdfSample sample(const Point2 &uv, const Vector &wo,
                       Sampler &rng) const override {
-        NOT_IMPLEMENTED
+        Vector normal{ 0, 0, 1 };
+        Color brdf{ m_reflectance->evaluate(uv) };
+        Vector newWi = reflect(wo, normal);
+        return BsdfSample{ newWi, brdf };
     }
 
     std::string toString() const override {
-        return tfm::format("Conductor[\n"
-                           "  reflectance = %s\n"
-                           "]",
-                           indent(m_reflectance));
+        return tfm::format(
+            "Conductor[\n"
+            "  reflectance = %s\n"
+            "]",
+            indent(m_reflectance));
     }
 };
 

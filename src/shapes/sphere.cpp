@@ -19,6 +19,11 @@ class Sphere : public Shape {
         surf.geometryNormal = Vector(position).normalized();
         surf.shadingNormal  = surf.geometryNormal;
 
+        // https://en.wikipedia.org/wiki/UV_mapping
+        surf.uv = {
+            0.5f + (atan2f(position.z(), position.x()) / (2 * Pi)),
+            0.5f + (std::asin(position.y()) / Pi),
+        };
         // 0 for now
         surf.pdf = 0.0f;
     }

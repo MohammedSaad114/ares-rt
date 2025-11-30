@@ -25,7 +25,24 @@ public:
 
     BsdfSample sample(const Point2 &uv, const Vector &wo,
                       Sampler &rng) const override {
-        NOT_IMPLEMENTED
+        Vector normal{ 0, 0, 1 };
+        float ior = m_ior->scalar(uv);
+        Color reflectance{ m_reflectance->evaluate(uv) };
+        float cosTheta = Frame::cosTheta(wo);
+
+        float eta = cosTheta < 0 ? 1 / ior : ior; // direction of transition
+        float fresnelTerm = fresnelDielectric(cosTheta, eta);
+
+        if (rng.next() < fresnelTerm) {
+            // reflection
+            Vector reflectedWi = reflect(wo, normal);
+            return BsdfSample{ reflectedWi, reflectance };
+        } else {
+            // refraction
+            Vector refractedWi = refract(wo, normal, eta);
+            Color transmittance{ m_transmittance->evaluate(uv) / (eta * eta) };
+            return BsdfSample{ refractedWi, transmittance };
+        }
     }
 
     std::string toString() const override {

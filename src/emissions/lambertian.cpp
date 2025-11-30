@@ -14,6 +14,8 @@ public:
         Vector normal{ 0, 0, 1 };
         Color brdf     = m_emission->evaluate(uv);
         float cosTheta = normal.dot(wo) / wo.length();
+
+        // outgoing vector is not is same hemisphere as normal
         if (cosTheta <= 0) {
             brdf = Color(0);
         }
@@ -32,3 +34,4 @@ public:
 } // namespace lightwave
 
 REGISTER_EMISSION(Lambertian, "lambertian")
+    
