@@ -5,15 +5,27 @@ namespace lightwave {
 class Tonemap : public Postprocess {
 
 public:
-    Tonemap(const Properties &properties) : Postprocess(properties) {
-    }
+    Tonemap(const Properties &properties) : Postprocess(properties) {}
 
     void execute() override {
         m_output->initialize(m_input->resolution());
 
-        NOT_IMPLEMENTED
+        float width  = m_input->resolution().x();
+        float height = m_input->resolution().y();
 
-        Streaming stream{*m_output};
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                for (int rgb = 0; rgb < 3; rgb++) {
+                    float color = m_input->get({ x, y })[rgb];
+                    // Reinhard tonemapping
+                    color = color / (color + 1.0f);
+
+                    m_output->get({ x, y })[rgb] = color;
+                }
+            }
+        }
+
+        Streaming stream{ *m_output };
         stream.update();
         m_output->save();
     }

@@ -33,7 +33,11 @@ struct DiffuseLobe {
         float cosTheta = normal.dot(wo) / wo.length();
 
         // ensures new direction is in the same hemisphere as the outgoing
-        newWi = cosTheta > 0.0f ? newWi : -newWi;
+        if (!Frame::cosTheta(wo) > 0.0f) {
+            return BsdfSample::invalid();
+        }
+        if (!Frame::sameHemisphere(wo, newWi))
+            return BsdfSample::invalid();
         // float pdf      = cosineHemispherePdf(newWi);
         return BsdfSample{ newWi, brdf };
 

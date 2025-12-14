@@ -43,12 +43,15 @@ public:
 
                     Ray shadowRay{ its.position, directSample.wi };
                     Intersection shadowIts = m_scene->intersect(shadowRay, rng);
+                    float rayTransmittance = m_scene->transmittance(
+                        shadowRay, directSample.distance, rng);
                     // no occlusion or light is closer than the occluder
-                    if (!shadowIts || shadowIts.t > directSample.distance) {
+                    if (rayTransmittance > 0.f) {
                         contribution +=
-                            accumalted *
+                            rayTransmittance * accumalted *
                             (its.evaluateBsdf(shadowRay.direction).value *
-                             directSample.weight / lightSample.probability);
+                             directSample.weight) /
+                            lightSample.probability;
                     }
                 }
             }

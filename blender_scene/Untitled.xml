@@ -1,0 +1,36 @@
+<scene id="scene">
+  <camera type="perspective">
+    <integer name="width" value="1920"/>
+    <integer name="height" value="1080"/>
+    <float name="fov" value="27.118"/>
+    <string name="fovAxis" value="x"/>
+    <transform>
+      <matrix value="0.68592,0.32401,-0.65156,7.3589,  0.72768,-0.30542,0.61417,-6.9258,  -4.0113e-09,-0.8954,-0.44527,4.9583,  0,0,0,1"/>
+    </transform>
+  </camera>
+  <light type="directional" direction="0.0089175,-0.95245,0.30458" intensity="10,10,10"/>
+  <instance>
+    <bsdf type="principled">
+      <texture name="baseColor" type="image" filename="textures/wood03_diffuse.jpg"/>
+      <texture name="roughness" type="image" filename="textures/wood03_roughness.jpg" linear="true"/>
+      <texture name="metallic" type="constant" value="0"/>
+      <texture name="specular" type="constant" value="0"/>
+    </bsdf>
+    <texture name="normal" type="image" filename="textures/wood03_normal_opengl.jpg" linear="true"/>
+    <shape type="mesh" filename="meshes/Suzanne.ply"/>
+    <transform>
+      <matrix value="0.70711,-0.70711,0,-0.030565,  0.70711,0.70711,0,0.0018158,  0,0,1,0.17776,  0,0,0,1"/>
+    </transform>
+  </instance>
+  <light type="envmap">
+    <texture type="constant" value="0.050876,0.050876,0.050876"/>
+    <transform>
+      <matrix value="1,0,0,0,  0,0,1,0,  0,-1,0,0,  0,0,0,1"/>
+    </transform>
+  </light>
+</scene>
+<integrator type="pathtracer" depth="10">
+  <ref id="scene"/>
+  <image id="noisy"/>
+  <sampler type="independent" count="64"/>
+</integrator>

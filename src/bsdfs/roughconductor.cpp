@@ -50,13 +50,16 @@ public:
         // float normalPdf   = microfacet::pdfGGXVNDF(alpha, halfVector, wo);
 
         Vector newWi = reflect(wo, halfVector);
-        newWi        = Frame::cosTheta(wo) > 0.0f ? newWi : -newWi;
+        if (!Frame::cosTheta(wo) > 0.0f) {
+            return BsdfSample::invalid();
+        }
 
         float smithG1I = microfacet::smithG1(alpha, halfVector, newWi);
 
         // bsdf / pdf cancels out to:
         Color weight = m_reflectance->evaluate(uv) * smithG1I;
-
+        if (!Frame::sameHemisphere(wo, newWi))
+            return BsdfSample::invalid();
         // hints:
         // * do not forget to cancel out as many terms from your
         // equations as possible!
