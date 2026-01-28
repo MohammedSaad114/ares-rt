@@ -1,4 +1,6 @@
+#ifdef LW_WITHOIDN
 #include <OpenImageDenoise/oidn.hpp>
+#endif
 #include <lightwave.hpp>
 
 namespace lightwave {
@@ -12,6 +14,7 @@ public:
     }
 
     virtual void execute() override {
+#ifdef LW_WITHOIDN
         m_output->initialize(m_input->resolution());
 
         const Point2i res         = m_input->resolution();
@@ -24,26 +27,43 @@ public:
         oidn::DeviceRef device = oidn::newDevice(); // CPU or GPU if available
         device.commit();
 
-        const size_t pixelCount    = size_t(width) * size_t(height);
-        const size_t pixelByteSize = pixelCount * sizeof(Color); // = pixelCount * 3 * sizeof(float)
+        const size_t pixelCount = size_t(width) * size_t(height);
+        const size_t pixelByteSize =
+            pixelCount * sizeof(Color); // = pixelCount * 3 * sizeof(float)
 
-        oidn::BufferRef colorBuf = device.newBuffer(width * height * 3 * sizeof(float));
+        oidn::BufferRef colorBuf =
+            device.newBuffer(width * height * 3 * sizeof(float));
         colorBuf.write(0, pixelByteSize, m_input->data());
 
         // generic ray tracing filter
         oidn::FilterRef filter = device.newFilter("RT");
-        filter.setImage("color", colorBuf, oidn::Format::Float3, width, height); // beauty
+        filter.setImage(
+            "color", colorBuf, oidn::Format::Float3, width, height); // beauty
         if (m_albedo) {
-            oidn::BufferRef albedoBuf = device.newBuffer(width * height * 3 * sizeof(float));
+            oidn::BufferRef albedoBuf =
+                device.newBuffer(width * height * 3 * sizeof(float));
             albedoBuf.write(0, pixelByteSize, m_albedo->data());
-            filter.setImage("albedo", albedoBuf, oidn::Format::Float3, width, height); // auxiliary
+            filter.setImage("albedo",
+                            albedoBuf,
+                            oidn::Format::Float3,
+                            width,
+                            height); // auxiliary
         }
         if (m_normals) {
-            oidn::BufferRef normalBuf = device.newBuffer(width * height * 3 * sizeof(float));
+            oidn::BufferRef normalBuf =
+                device.newBuffer(width * height * 3 * sizeof(float));
             normalBuf.write(0, pixelByteSize, m_normals->data());
-            filter.setImage("normal", normalBuf, oidn::Format::Float3, width, height); // auxiliary
+            filter.setImage("normal",
+                            normalBuf,
+                            oidn::Format::Float3,
+                            width,
+                            height); // auxiliary
         }
-        filter.setImage("output", colorBuf, oidn::Format::Float3, width, height); // denoised
+        filter.setImage("output",
+                        colorBuf,
+                        oidn::Format::Float3,
+                        width,
+                        height); // denoised
 
         // beauty
         filter.set("hdr", true); // beauty image is HDR
@@ -53,7 +73,7 @@ public:
         // Check for errors
         const char *errorMessage;
         if (device.getError(errorMessage) != oidn::Error::None)
-            logger(EError, "%s", errorMessage);      
+            logger(EError, "%s", errorMessage);
 
         // Fill the input image buffers
         void *outPtr = colorBuf.getData();
@@ -63,6 +83,7 @@ public:
         m_output->save();
         Streaming stream{ *m_output };
         stream.update();
+#endif
     }
 
     std::string toString() const override {
