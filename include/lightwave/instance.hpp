@@ -39,9 +39,9 @@ class Instance : public Shape {
     /// @brief The transformation applied to the shape, leading from object
     /// coordinates to world coordinates.
     ref<Transform> m_transform;
-    ref<Texture> m_normal;
     /// @brief Tracks whether this instance has been added to the scene, i.e.,
     /// could be hit by ray tracing.
+    ref<Texture> m_normal;
     bool m_visible;
 
     /// @brief Transforms the frame from object coordinates to world
@@ -50,13 +50,14 @@ class Instance : public Shape {
 
 public:
     Instance(const Properties &properties) : m_light(nullptr) {
+        m_normal    = properties.getOptional<Texture>("normal");
         m_shape     = properties.getChild<Shape>();
         m_bsdf      = properties.getOptionalChild<Bsdf>();
         m_emission  = properties.getOptionalChild<Emission>();
         m_transform = properties.getOptionalChild<Transform>();
-        m_normal    = properties.getOptional<Texture>("normal");
-        m_visible = false;
+        m_visible   = false;
     }
+    float transmittance(const Ray &ray, float tMax, Sampler &rng) const override;
 
     /// @brief Returns the shape.
     Shape *shape() const { return m_shape.get(); }
@@ -96,10 +97,7 @@ public:
      * (e.g., alpha masking or volume intersections).
      * @return @c true if an intersection was found.
      */
-    bool intersect(const Ray &ray, Intersection &its,
-                   Sampler &rng) const override;
-    float transmittance(const Ray &ray, float tMax,
-                        Sampler &rng) const override;
+    bool intersect(const Ray &ray, Intersection &its, Sampler &rng) const override;
     /// @brief Returns the bounding box of the instance in world coordinates.
     Bounds getBoundingBox() const override;
     /// @brief Returns the centroid of the instance in world coordinates.
@@ -123,8 +121,7 @@ public:
             indent(m_shape),
             indent(m_bsdf),
             indent(m_emission),
-            indent(m_transform)
-        );
+            indent(m_transform));
     }
 };
 

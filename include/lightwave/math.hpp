@@ -274,7 +274,12 @@ public:
     /// @brief Computes the length of this vector.
     Type length() const { return sqrt(lengthSquared()); }
     /// @brief Returns a normalized copy of this vector.
-    auto normalized() const { return *this / length(); }
+    auto normalized() const {
+        Type len2 = lengthSquared();
+        if (len2 == 0)
+            return *this;
+        return *this / std::sqrt(len2);
+    }
 
     /// @brief Returns the length of this vector along with a normalized copy.
     auto lengthAndNormalized() const {
@@ -960,13 +965,23 @@ struct SurfaceEvent {
     float pdf;
     /// @brief The instance object associated with the surface.
     const Instance *instance = nullptr;
-
     Frame shadingFrame() const {
-        Vector projectedTangent =
-            (tangent - tangent.dot(shadingNormal) * shadingNormal).normalized();
-        return { projectedTangent,
-                 shadingNormal.cross(projectedTangent),
-                 shadingNormal };
+        // 1. Normalize shading normal FIRST
+        Vector N = shadingNormal.normalized();
+
+        // 2. Build a stable tangent
+        Vector T;
+        if (std::abs(N.z()) < 0.999f) {
+            T = Vector(-N.y(), N.x(), 0.0f);
+        } else {
+            T = Vector(0.0f, -N.z(), N.y());
+        }
+        T = T.normalized();
+
+        // 3. Bitangent
+        Vector B = N.cross(T);
+
+        return { T, B, N };
     }
 };
 

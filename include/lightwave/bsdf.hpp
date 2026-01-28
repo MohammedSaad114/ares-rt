@@ -69,6 +69,8 @@ public:
                               const Vector &wi) const {
         NOT_IMPLEMENTED
     }
+
+    virtual Color getAlbedo(const Point2 &uv) const { NOT_IMPLEMENTED }
     /**
      * @brief Samples a direction according to the distribution of the Bsdf in
      * local coordinates (i.e., the normal is assumed to be [0,0,1]).
