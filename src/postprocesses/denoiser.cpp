@@ -1,4 +1,4 @@
-#ifdef LW_WITHOIDN
+#ifdef LW_WITH_OIDN
 #include <OpenImageDenoise/oidn.hpp>
 #endif
 #include <lightwave.hpp>
@@ -14,7 +14,7 @@ public:
     }
 
     virtual void execute() override {
-#ifdef LW_WITHOIDN
+#ifdef LW_WITH_OIDN
         m_output->initialize(m_input->resolution());
 
         const Point2i res         = m_input->resolution();
