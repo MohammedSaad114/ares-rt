@@ -13,11 +13,11 @@ public:
         float width  = m_input->resolution().x();
         float height = m_input->resolution().y();
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                for (int rgb = 0; rgb < 3; rgb++) {
+        for (int rgb = 0; rgb < 3; rgb++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
                     float color = m_input->get({ x, y })[rgb];
-                    // Reinhard tonemapping
+                    // Simple Reinhard tonemapping
                     color = color / (color + 1.0f);
 
                     m_output->get({ x, y })[rgb] = color;

@@ -8,10 +8,20 @@ namespace lightwave {
 void Instance::transformFrame(SurfaceEvent &surf, const Vector &wo) const {
     surf.tangent  = m_transform->apply(surf.tangent).normalized();
     surf.position = m_transform->apply(surf.position);
-    surf.shadingNormal =
-        m_transform->applyNormal(surf.shadingNormal).normalized();
-    surf.geometryNormal =
-        m_transform->applyNormal(surf.geometryNormal).normalized();
+
+    if (m_normal) {
+        // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+        // obtain normal map in range [0,1]
+        Color normalColor = m_normal->evaluate(surf.uv);
+        // transform normal vector to range [-1,1]
+        Vector normal{ normalColor.r() * 2.f - 1.f, normalColor.g() * 2.f - 1.f, normalColor.b() * 2.f - 1.f };
+        // change coordinate-system to world space
+        Vector worldNormal = m_transform->applyNormal(surf.shadingFrame().toWorld(normal)).normalized();
+        surf.shadingNormal = worldNormal;
+    } else {
+        surf.shadingNormal = m_transform->applyNormal(surf.shadingNormal).normalized();
+    }
+    surf.geometryNormal = m_transform->applyNormal(surf.geometryNormal).normalized();
 }
 
 inline void validateIntersection(const Intersection &its) {
@@ -25,24 +35,17 @@ inline void validateIntersection(const Intersection &its) {
     // (useful for printing out variables to narrow done what failed)
 
     assert_finite(its.t, {
-        logger(
-            EError,
-            "  your intersection produced a non-finite intersection distance");
+        logger(EError, "  your intersection produced a non-finite intersection distance");
         logger(EError, "  offending shape: %s", its.instance->shape());
     });
     assert_condition(its.t >= Epsilon, {
-        logger(EError,
-               "  your intersection is susceptible to self-intersections");
+        logger(EError, "  your intersection is susceptible to self-intersections");
         logger(EError, "  offending shape: %s", its.instance->shape());
-        logger(EError,
-               "  returned t: %.3g (smaller than Epsilon = %.3g)",
-               its.t,
-               Epsilon);
+        logger(EError, "  returned t: %.3g (smaller than Epsilon = %.3g)", its.t, Epsilon);
     });
 }
 
-bool Instance::intersect(const Ray &worldRay, Intersection &its,
-                         Sampler &rng) const {
+bool Instance::intersect(const Ray &worldRay, Intersection &its, Sampler &rng) const {
     if (!m_transform) {
         // fast path, if no transform is needed
         const Ray localRay        = worldRay;
@@ -56,10 +59,10 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
 
     const float previousT = its.t;
     Ray localRay;
-    localRay = m_transform->inverse(worldRay);
-    float length = localRay.direction.length();
-    localRay.direction = localRay.direction / length;
-    its.t    *= length;
+    localRay           = m_transform->inverse(worldRay);
+    float length       = localRay.direction.length();
+    localRay.direction = localRay.direction.normalized();
+    its.t              = previousT * length;
 
     // hints:
     // * transform the ray (do not forget to normalize!)
@@ -79,8 +82,7 @@ bool Instance::intersect(const Ray &worldRay, Intersection &its,
     return wasIntersected;
 }
 
-float Instance::transmittance(const Ray &worldRay, float tMax,
-                              Sampler &rng) const {
+float Instance::transmittance(const Ray &worldRay, float tMax, Sampler &rng) const {
     if (!m_transform) {
         return m_shape->transmittance(worldRay, tMax, rng);
     }

@@ -6,8 +6,7 @@ class AovIntegrator : public SamplingIntegrator {
     float m_scale;
 
 public:
-    AovIntegrator(const Properties &properties)
-        : SamplingIntegrator(properties) {
+    AovIntegrator(const Properties &properties) : SamplingIntegrator(properties) {
         m_variable = properties.get<std::string>("variable");
         m_scale    = properties.get<float>("scale", 1.0f);
     }
@@ -30,6 +29,14 @@ public:
             int bCounter = its.stats.bvhCounter;
             int pCounter = its.stats.primCounter;
             return Color(bCounter / m_scale, pCounter / m_scale, 0);
+        } else if (m_variable == "albedo") {
+            if (its) {
+                Bsdf *bsdf = its.instance->bsdf();
+                if (bsdf) {
+                    return bsdf->getAlbedo(its.uv);
+                }
+                return Color(0);
+            }
         }
         return Color();
     }

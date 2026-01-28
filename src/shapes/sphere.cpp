@@ -24,15 +24,14 @@ class Sphere : public Shape {
             0.5f + (atan2f(position.z(), position.x()) / (2 * Pi)),
             0.5f + (std::asin(position.y()) / Pi),
         };
-        // 0 for now
-        surf.pdf = 0.0f;
+        // uniform in local space
+        surf.pdf = 1.f / (4.f * Pi);
     }
 
 public:
     Sphere(const Properties &properties) {}
 
-    bool intersect(const Ray &ray, Intersection &its,
-                   Sampler &rng) const override {
+    bool intersect(const Ray &ray, Intersection &its, Sampler &rng) const override {
         // quadratic equation:
         // (d⋅d)t^2+2(d⋅m)t+(m⋅m−r^2)=0
         // solution: t1,2=(-b±sqrt(b^2-4ac))/2a
@@ -77,11 +76,16 @@ public:
 
     Point getCentroid() const override { return Point(0, 0, 0); }
 
-    AreaSample sampleArea(Sampler &rng) const override{
-        NOT_IMPLEMENTED
-    } std::string toString() const override {
-        return "Sphere[]";
+    AreaSample sampleArea(Sampler &rng) const override {
+        Point2 rnd = rng.next2D(); // sample a random point in [0,0]..[1,1]
+        // uniform sampling
+        Point position = squareToUniformSphere(rnd);
+        AreaSample sample;
+        populate(sample, position); // compute the shading frame, texture coordinates
+                                    // and area pdf (same as intersection)
+        return sample;
     }
+    std::string toString() const override { return "Sphere[]"; }
 };
 } // namespace lightwave
 REGISTER_SHAPE(Sphere, "sphere")

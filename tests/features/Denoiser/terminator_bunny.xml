@@ -1,0 +1,127 @@
+        <scene id="scene">
+            <camera type="perspective" id="camera">
+                <integer name="width" value="1000"/>
+                <integer name="height" value="1000"/>
+
+                <string name="fovAxis" value="x"/>
+                <float name="fov" value="40"/>
+
+                <transform>
+                    <translate z="-4"/>
+                </transform>
+            </camera>
+
+            
+            <light type="directional" direction="-0.2,-1.2,-1" intensity="2.1,1.88,1.65"/>
+            <light type="point" position="-0.3,-0.8,+0.6" power="2,0,0"/>
+            <light type="point" position=" 0.0,-0.8,+0.6" power="0,2,0"/>
+            <light type="point" position="+0.3,-0.8,+0.6" power="0,0,2"/>
+            <light type="point" position="0,0.5,0" power="100,0,0"/>
+
+            <bsdf type="diffuse" id="wall material">
+                <texture name="albedo" type="constant" value="0.9"/>
+            </bsdf>
+
+            <instance id="back">
+                <shape type="rectangle"/>
+                <ref id="wall material"/>
+                <transform>
+                    <scale z="-1"/>
+                    <translate z="1"/>
+                </transform>
+            </instance>
+
+            <instance id="floor">
+                <shape type="rectangle"/>
+                <ref id="wall material"/>
+                <transform>
+                    <rotate axis="1,0,0" angle="90"/>
+                    <translate y="1"/>
+                </transform>
+            </instance>
+
+            <instance id="ceiling">
+                <shape type="rectangle"/>
+                <ref id="wall material"/>
+                <transform>
+                    <rotate axis="1,0,0" angle="-90"/>
+                    <translate y="-1"/>
+                </transform>
+            </instance>
+
+            <instance id="left wall">
+                <shape type="rectangle"/>
+                <bsdf type="diffuse">
+                    <texture name="albedo" type="constant" value="0.9,0,0"/>
+                </bsdf>
+                <transform>
+                    <rotate axis="0,1,0" angle="90"/>
+                    <translate x="-1"/>
+                </transform>
+            </instance>
+
+            <instance id="right wall">
+                <shape type="rectangle"/>
+                <bsdf type="diffuse">
+                    <texture name="albedo" type="constant" value="0,0.9,0"/>
+                </bsdf>
+                <transform>
+                    <rotate axis="0,1,0" angle="-90"/>
+                    <translate x="1"/>
+                </transform>
+            </instance>
+
+            <instance id="lamp">
+                <shape type="rectangle"/>
+                <emission type="lambertian">
+                    <texture name="emission" type="constant" value="1.2,0.6,0.5"/>
+                </emission>
+                <bsdf type="diffuse">
+                    <texture name="albedo" type="constant" value="0.5"/>
+                </bsdf>
+                <transform>
+                    <scale value="0.9"/>
+                    <rotate axis="1,0,0" angle="-90"/>
+                    <translate y="-0.98"/>
+                </transform>
+            </instance>
+         <instance>
+                <shape type="mesh" filename="../meshes/bunny.ply"/>
+                <bsdf type="principled">
+                    <texture name="baseColor" type="constant" value="1"/>
+                    <texture name="specular" type="constant" value="1"/>
+                    <texture name="metallic" type="constant" value="1"/>
+                    <texture name="roughness" type="constant" value="0.1"/>
+                </bsdf>
+                <transform>
+                    <scale value="0.8"/>
+                    <rotate axis="1,0,0" angle="90"/>
+                    <translate x="0.18" y="1.03"/>
+                </transform>
+            </instance>
+    </scene>
+
+<integrator type="pathtracer" depth="16">
+  <ref id="scene"/>
+  <image id="noisy"/>
+  <sampler type="independent" count="64"/>
+</integrator>
+
+<integrator type="aov" variable="normals">
+    <ref id="scene"/>
+    <image id="normals_pathtracing_lights"/>
+    <sampler type="independent" count="64"/>
+</integrator>
+
+<integrator type="aov" variable="albedo">
+    <ref id="scene"/>
+    <image id="albedo_pathtracing_lights"/>
+    <sampler type="independent" count="64"/>
+</integrator>
+
+<postprocess type="denoiser">
+	<ref name="input" id="noisy"/>
+	<ref name="normals" id="normals_pathtracing_lights"/>
+    <ref name="albedo" id="albedo_pathtracing_lights"/>
+	<image id="denoised"/>
+</postprocess>

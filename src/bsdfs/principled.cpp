@@ -33,14 +33,13 @@ struct DiffuseLobe {
         float cosTheta = normal.dot(wo) / wo.length();
 
         // ensures new direction is in the same hemisphere as the outgoing
-        if (!Frame::cosTheta(wo) > 0.0f) {
+        if (!(cosTheta > 0.0f)) {
             return BsdfSample::invalid();
         }
         if (!Frame::sameHemisphere(wo, newWi))
             return BsdfSample::invalid();
         // float pdf      = cosineHemispherePdf(newWi);
-        return BsdfSample{ newWi, brdf };
-
+        return BsdfSample{ newWi.normalized(), brdf };
         // hints:
         // * copy your diffuse bsdf evaluate here
         // * you do not need to query a texture, the albedo is given by `color`
@@ -71,8 +70,7 @@ struct MetallicLobe {
 
         // hints:
         // * the microfacet normal can be computed from `wi' and `wo'
-        return BsdfEval{ (reflectance * microfacetD * smithG1O * smithG1I) /
-                         denominator };
+        return BsdfEval{ (reflectance * microfacetD * smithG1O * smithG1I) / denominator };
 
         // hints:
         // * copy your roughconductor bsdf evaluate here
@@ -82,12 +80,20 @@ struct MetallicLobe {
     }
 
     BsdfSample sample(const Vector &wo, Sampler &rng) const {
+        Vector normal{ 0, 0, 1 };
+        float cosTheta = normal.dot(wo) / wo.length();
+        if (!(cosTheta > 0.0f)) {
+            return BsdfSample::invalid();
+        }
+
         Vector halfVector = microfacet::sampleGGXVNDF(alpha, wo, rng.next2D());
         // float normalPdf   = microfacet::pdfGGXVNDF(alpha, halfVector, wo);
 
         Vector newWi = reflect(wo, halfVector);
-        newWi        = Frame::cosTheta(wo) > 0.0f ? newWi : -newWi;
+        if (!Frame::sameHemisphere(wo, newWi))
+            return BsdfSample::invalid();
 
+        //newWi        = Frame::cosTheta(wo) > 0.0f ? newWi : -newWi;
         float smithG1I = microfacet::smithG1(alpha, halfVector, newWi);
 
         // bsdf / pdf cancels out to:
@@ -98,7 +104,7 @@ struct MetallicLobe {
         // equations as possible!
         //   (the resulting sample weight is only a product of two
         //   factors)
-        return BsdfSample{ newWi, weight };
+        return BsdfSample{ newWi.normalized(), weight };
 
         // hints:
         // * copy your roughconductor bsdf sample here
@@ -125,8 +131,7 @@ class Principled : public Bsdf {
         const auto alpha     = max(float(1e-3), sqr(m_roughness->scalar(uv)));
         const auto specular  = m_specular->scalar(uv);
         const auto metallic  = m_metallic->scalar(uv);
-        const auto F =
-            specular * schlick((1 - metallic) * 0.08f, Frame::cosTheta(wo));
+        const auto F         = specular * schlick((1 - metallic) * 0.08f, Frame::cosTheta(wo));
 
         const DiffuseLobe diffuseLobe = {
             .color = (1 - F) * (1 - metallic) * baseColor,
@@ -137,13 +142,11 @@ class Principled : public Bsdf {
         };
 
         const auto diffuseAlbedo = diffuseLobe.color.mean();
-        const auto totalAlbedo =
-            diffuseLobe.color.mean() + metallicLobe.color.mean();
+        const auto totalAlbedo   = diffuseLobe.color.mean() + metallicLobe.color.mean();
         return {
-            .diffuseSelectionProb =
-                totalAlbedo > 0 ? diffuseAlbedo / totalAlbedo : 1.0f,
-            .diffuse  = diffuseLobe,
-            .metallic = metallicLobe,
+            .diffuseSelectionProb = totalAlbedo > 0 ? diffuseAlbedo / totalAlbedo : 1.0f,
+            .diffuse              = diffuseLobe,
+            .metallic             = metallicLobe,
         };
     }
 
@@ -155,8 +158,7 @@ public:
         m_specular  = properties.get<Texture>("specular");
     }
 
-    BsdfEval evaluate(const Point2 &uv, const Vector &wo,
-                      const Vector &wi) const override {
+    BsdfEval evaluate(const Point2 &uv, const Vector &wo, const Vector &wi) const override {
         PROFILE("Principled")
 
         const auto combination = combine(uv, wo);
@@ -165,29 +167,39 @@ public:
         // combine their results
         BsdfEval diffuseEval  = combination.diffuse.evaluate(wo, wi);
         BsdfEval metallicEval = combination.metallic.evaluate(wo, wi);
+
+        BsdfEval bsdfEval{ diffuseEval.value + metallicEval.value };
         return BsdfEval{ diffuseEval.value + metallicEval.value };
     }
 
-    BsdfSample sample(const Point2 &uv, const Vector &wo,
-                      Sampler &rng) const override {
-        PROFILE("Principled")
-
-        const auto combination = combine(uv, wo);
-
+    BsdfSample sample(const Point2 &uv, const Vector &wo, Sampler &rng) const override {
+        PROFILE("Principled");
         // hint: sample either `combination.diffuse` (probability
         // `combination.diffuseSelectionProb`) or `combination.metallic`
 
-        BsdfSample sample = combination.metallic.sample(wo, rng);
+        if (Frame::cosTheta(wo) <= 0.0f) {
+            return BsdfSample::invalid();
+        }
+
+        const auto combination = combine(uv, wo);
+        BsdfSample sample;
+        Color weight;
+
         if (rng.next() < combination.diffuseSelectionProb) {
             sample = combination.diffuse.sample(wo, rng);
-            return BsdfSample{
-                sample.wi, sample.weight / combination.diffuseSelectionProb
-            };
+            weight = sample.weight / combination.diffuseSelectionProb;
+        } else {
+            sample = combination.metallic.sample(wo, rng);
+            weight = sample.weight / (1 - combination.diffuseSelectionProb);
         }
-        return BsdfSample{
-            sample.wi, sample.weight / (1 - combination.diffuseSelectionProb)
-        };
+
+        if (sample.isInvalid())
+            return sample;
+
+        return BsdfSample{ sample.wi.normalized(), weight};
     }
+
+    Color getAlbedo(const Point2 &uv) const override { return m_baseColor->evaluate(uv); }
 
     std::string toString() const override {
         return tfm::format(

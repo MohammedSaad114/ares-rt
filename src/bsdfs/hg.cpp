@@ -12,39 +12,32 @@ public:
         m_albedo = properties.get<Color>("albedo");
     }
 
-    BsdfEval evaluate(const Point2 &uv, const Vector &wo,
-                      const Vector &wi) const override {
-        // evaluation function term
-        float cosTheta = Frame::cosTheta(wi);
-        float piTerm   = 4.0f * Pi;
-        float denom =
-            piTerm * (pow(1.0f + sqr(m_g) + 2.0f * m_g * cosTheta, 1.5f));
+    BsdfEval evaluate(const Point2 &uv, const Vector &wo, const Vector &wi) const override {
+        float cosTheta  = Frame::cosTheta(wi);
+        float piTerm    = 4.0f * Pi;
+        float denom     = piTerm * (pow(1.0f + sqr(m_g) + 2.0f * m_g * cosTheta, 1.5f));
         float numerator = 1.0f - sqr(m_g);
 
         Color weight = (numerator / denom) * m_albedo;
         return BsdfEval{ weight };
     }
 
-    BsdfSample sample(const Point2 &uv, const Vector &wo,
-                      Sampler &rng) const override {
+    BsdfSample sample(const Point2 &uv, const Vector &wo, Sampler &rng) const override {
         float phi = 2.0f * Pi * rng.next();
         float x   = rng.next();
-
-        // given term
         float costheta;
         if (std::abs(m_g) < Epsilon) {
             costheta = 1.0f - 2.0f * x;
         } else {
             float sqrTerm = (1.0f - sqr(m_g)) / (1.0f + m_g - 2.0f * m_g * x);
-            costheta =
-                (-1.0f / (2.0f * m_g)) * (1.0f + sqr(m_g) - sqr(sqrTerm));
+            costheta      = (-1.0f / (2.0f * m_g)) * (1.0f + sqr(m_g) - sqr(sqrTerm));
         }
 
-        // lecture 4 slide 24
         float sinphi   = sin(phi);
         float cosphi   = cos(phi);
         float sin2     = std::max(0.0f, 1.0f - sqr(costheta));
         float sintheta = std::sqrt(sin2);
+        costheta       = std::clamp(costheta, -1.0f, 1.0f);
 
         Vector newWi = {
             cosphi * sintheta,
@@ -56,6 +49,7 @@ public:
             m_albedo,
         };
     }
+    Color getAlbedo(const Point2 &uv) const override { return m_albedo; }
 
     std::string toString() const override {
         return tfm::format(

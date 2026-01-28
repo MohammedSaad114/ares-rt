@@ -39,6 +39,7 @@ class Instance : public Shape {
     /// @brief The transformation applied to the shape, leading from object
     /// coordinates to world coordinates.
     ref<Transform> m_transform;
+    ref<Texture> m_normal;
     /// @brief Tracks whether this instance has been added to the scene, i.e.,
     /// could be hit by ray tracing.
     bool m_visible;
@@ -53,6 +54,7 @@ public:
         m_bsdf      = properties.getOptionalChild<Bsdf>();
         m_emission  = properties.getOptionalChild<Emission>();
         m_transform = properties.getOptionalChild<Transform>();
+        m_normal    = properties.getOptional<Texture>("normal");
         m_visible = false;
     }
 

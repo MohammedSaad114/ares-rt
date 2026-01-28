@@ -14,8 +14,7 @@ public:
         m_roughness   = properties.get<Texture>("roughness");
     }
 
-    BsdfEval evaluate(const Point2 &uv, const Vector &wo,
-                      const Vector &wi) const override {
+    BsdfEval evaluate(const Point2 &uv, const Vector &wo, const Vector &wi) const override {
         // Using the squared roughness parameter results in a more gradual
         // transition from specular to rough. For numerical stability, we avoid
         // extremely specular distributions (alpha values below 10^-3)
@@ -39,12 +38,10 @@ public:
 
         // hints:
         // * the microfacet normal can be computed from `wi' and `wo'
-        return BsdfEval{ (reflectance * microfacetD * smithG1O * smithG1I) /
-                         denominator };
+        return BsdfEval{ (reflectance * microfacetD * smithG1O * smithG1I) / denominator };
     }
 
-    BsdfSample sample(const Point2 &uv, const Vector &wo,
-                      Sampler &rng) const override {
+    BsdfSample sample(const Point2 &uv, const Vector &wo, Sampler &rng) const override {
         const auto alpha  = max(float(1e-3), sqr(m_roughness->scalar(uv)));
         Vector halfVector = microfacet::sampleGGXVNDF(alpha, wo, rng.next2D());
         // float normalPdf   = microfacet::pdfGGXVNDF(alpha, halfVector, wo);
@@ -65,8 +62,10 @@ public:
         // equations as possible!
         //   (the resulting sample weight is only a product of two
         //   factors)
-        return BsdfSample{ newWi, weight };
+        return BsdfSample{ newWi.normalized(), weight };
     }
+
+    Color getAlbedo(const Point2 &uv) const override { return Color(0); }
 
     std::string toString() const override {
         return tfm::format(
