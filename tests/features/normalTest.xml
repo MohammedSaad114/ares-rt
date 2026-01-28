@@ -82,6 +82,6 @@
             </instance>
 
         </scene>
-        <sampler type="independent" count="1024"/>
+        <sampler type="independent" count="64"/>
     </integrator>
 </test>

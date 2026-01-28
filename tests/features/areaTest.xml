@@ -59,6 +59,6 @@
                 </transform>
             </instance>
         </scene>
-        <sampler type="independent" count="512"/>
+        <sampler type="independent" count="64"/>
     </integrator>
 </test>
