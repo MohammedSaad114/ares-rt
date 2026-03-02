@@ -74,7 +74,7 @@ Ares RT is a raytracing engine developed on top of the Lightwave Framework. It i
   * Next Event Estimation (NEE)
 
 ### Examples
-Some of the implemented features are showcased [here](https://mohammedsaad114.github.io/rendering-competition/).
+Some of the implemented features as well as credits for the used assets are showcased [here](https://mohammedsaad114.github.io/rendering-competition/).
 
 ---
 
