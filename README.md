@@ -1,6 +1,6 @@
 # Ares RT
 
-Ares RT is a raytracing engine developed on top of the Lightwave Framework. It is a project part of the Computer Graphics course at Saarland University lectured by Prof. Dr.-Ing. Philipp Slusallek. 
+Ares RT is a raytracing engine developed on top of the Lightwave Framework. It is a project part of the Computer Graphics course at Saarland University lectured by [Prof. Dr.-Ing. Philipp Slusallek](https://graphics.cg.uni-saarland.de/people/slusallek.html). 
 
 ![Blender Scene rendered with Ares RT](https://mohammedsaad114.github.io/rendering-competition/render.jpg)
 
