@@ -33,7 +33,7 @@ Ares RT is a raytracing engine developed on top of the Lightwave Framework. It i
   * Random number generators
 * A Blender exporter
   * Exports a scene that is built in Blender to a format accepted by lightwave
----
+
 ### Features Provided by Ares RT
 * BSDFs:
   * Diffuse
@@ -75,6 +75,8 @@ Ares RT is a raytracing engine developed on top of the Lightwave Framework. It i
 
 ### Examples
 Some of the implemented features are showcased [here](https://mohammedsaad114.github.io/rendering-competition/).
+
+---
 
 ## Copyright & Credits
 Lightwave was written by [Alexander Rath](https://graphics.cg.uni-saarland.de/people/rath.html), with contributions from [Ömercan Yazici](https://graphics.cg.uni-saarland.de/people/yazici.html) and [Philippe Weier](https://graphics.cg.uni-saarland.de/people/weier.html).
