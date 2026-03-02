@@ -69,7 +69,7 @@
 <integrator type="direct" depth="10">
     <ref id="scene"/>
 	<image id="noisy"/>
-	<sampler type="independent" count="64"/>
+	<sampler type="independent" count="512"/>
 </integrator>
 
 <postprocess type="bloom">
