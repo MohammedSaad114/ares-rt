@@ -2,6 +2,8 @@
 
 Ares RT is a raytracing engine developed on top of the Lightwave Framework. It is a project part of the Computer Graphics course at Saarland University lectured by Prof. Dr.-Ing. Philipp Slusallek. 
 
+![Blender Scene rendered with Ares RT](https://mohammedsaad114.github.io/rendering-competition/render.jpg)
+
 ---
 
 ## Features
@@ -70,6 +72,9 @@ Ares RT is a raytracing engine developed on top of the Lightwave Framework. It i
 * Sampling:
   * BSDF Sampling 
   * Next Event Estimation (NEE)
+
+### Examples
+Some of the implemented features are showcased [here](https://mohammedsaad114.github.io/rendering-competition/).
 
 ## Copyright & Credits
 Lightwave was written by [Alexander Rath](https://graphics.cg.uni-saarland.de/people/rath.html), with contributions from [Ömercan Yazici](https://graphics.cg.uni-saarland.de/people/yazici.html) and [Philippe Weier](https://graphics.cg.uni-saarland.de/people/weier.html).
